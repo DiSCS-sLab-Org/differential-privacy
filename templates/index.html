@@ -468,10 +468,10 @@
             if (epsilon < 0.5) {
                 indicator.className = 'privacy-indicator privacy-very-strong';
                 indicator.textContent = '●●● Very Strong Privacy';
-            } else if (epsilon < 1.0) {
+            } else if (epsilon <= 1.0) {
                 indicator.className = 'privacy-indicator privacy-strong';
                 indicator.textContent = '●● Strong Privacy';
-            } else if (epsilon < 2.0) {
+            } else if (epsilon <= 2.0) {
                 indicator.className = 'privacy-indicator privacy-moderate';
                 indicator.textContent = '● Moderate Privacy';
             } else {
