@@ -130,6 +130,14 @@ def query():
 
 
 if __name__ == '__main__':
+    import socket
+
+    # Use port 8889 (internal network port, avoid conflicts with 5000 and 8888)
+    PORT = 8889
+
+    # Get hostname for network access
+    hostname = socket.gethostname()
+
     print("=" * 60)
     print("🔒 Differential Privacy Attack Query Dashboard")
     print("=" * 60)
@@ -142,8 +150,10 @@ if __name__ == '__main__':
         print("   Showing clean DP-protected results only")
         print("   Run with -d flag to enable debug mode")
     print("\nStarting web server...")
-    print("Open your browser and go to: http://localhost:5000")
+    print(f"\n📡 Access the dashboard:")
+    print(f"   Local:   http://localhost:{PORT}")
+    print(f"   Network: http://{hostname}:{PORT}")
     print("\nPress CTRL+C to stop the server")
     print("=" * 60)
 
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=PORT, debug=True)

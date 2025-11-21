@@ -46,12 +46,26 @@ python3 app.py -d
 ```
 Shows additional details: sensitivity, noise, true count, top attackers, interpretation.
 
+### Accessing the Dashboard
+
+When you start the app, it will display access URLs:
+
+**On the same machine:**
+```
+http://localhost:8889
+```
+
+**From other machines on local network:**
+```
+http://<vm-hostname>:8889
+```
+Replace `<vm-hostname>` with your VM's hostname (shown when app starts)
+
 **Then:**
-1. **Open browser**: Go to `http://localhost:5000`
-2. **Enter date**: Select date from calendar
-3. **Adjust epsilon**: Slide to set privacy level (0.5-1.0 recommended)
-4. **Query**: Click "Query Attack Count"
-5. **Repeat**: Try querying the same day multiple times - see different results!
+1. **Enter date**: Select date from calendar
+2. **Adjust epsilon**: Slide to set privacy level (0.5-1.0 recommended)
+3. **Query**: Click "Query Attack Count"
+4. **Repeat**: Try querying the same day multiple times - see different results!
 
 ## 🔧 Files
 
