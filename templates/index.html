@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Differential Privacy Attack Query Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        {% if debug_mode %}
+        .debug-badge {
+            display: inline-block;
+            background: #ff9800;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        {% endif %}
+
+        .query-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .query-panel h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input[type="date"],
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .epsilon-control {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .epsilon-slider {
+            flex: 1;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+        }
+
+        .epsilon-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 100px;
+        }
+
+        .privacy-indicator {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .privacy-very-strong { background: #d4edda; color: #155724; }
+        .privacy-strong { background: #d1ecf1; color: #0c5460; }
+        .privacy-moderate { background: #fff3cd; color: #856404; }
+        .privacy-weak { background: #f8d7da; color: #721c24; }
+
+        .query-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .query-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .query-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .results-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
+        .results-panel.show {
+            display: block;
+        }
+
+        .result-main {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .result-main h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .result-main .count {
+            font-size: 56px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        /* Debug-only sections */
+        .debug-section {
+            {% if not debug_mode %}
+            display: none !important;
+            {% endif %}
+        }
+
+        .result-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .detail-card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detail-card .label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .detail-card .value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .info-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        .info-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .info-section ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .info-section li {
+            padding: 8px 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .info-section li:before {
+            content: "• ";
+            color: #667eea;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .top-attackers {
+            background: #fff3cd;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+        }
+
+        .top-attackers h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .top-attackers table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .top-attackers th,
+        .top-attackers td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .top-attackers th {
+            background: #ffc107;
+            color: white;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            border-left: 4px solid #f5c6cb;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+            font-size: 18px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔒 Differential Privacy Attack Query Dashboard</h1>
+            <p>Query attack counts by day with differential privacy protection</p>
+            {% if debug_mode %}
+            <span class="debug-badge">⚠️ DEBUG MODE</span>
+            {% endif %}
+        </div>
+
+        <!-- Query Panel -->
+        <div class="query-panel">
+            <h2>Query Parameters</h2>
+
+            <div class="form-group">
+                <label for="date">Date (YYYY-MM-DD)</label>
+                <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+                <label for="epsilon">Privacy Budget (ε)</label>
+                <div class="epsilon-control">
+                    <div class="epsilon-slider">
+                        <input type="range" id="epsilon" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="epsilon-value">
+                        <span id="epsilon-display">1.0</span>
+                    </div>
+                </div>
+                <div id="privacy-indicator" class="privacy-indicator privacy-strong">
+                    ● Strong Privacy
+                </div>
+            </div>
+
+            <button class="query-btn" onclick="executeQuery()">
+                🔍 Query Attack Count
+            </button>
+        </div>
+
+        <!-- Results Panel -->
+        <div id="results-panel" class="results-panel">
+            <div id="loading" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Fetching and calculating...</p>
+            </div>
+
+            <div id="results-content" style="display: none;">
+                <!-- Main Result -->
+                <div class="result-main">
+                    <h2>🔒 DP-Protected Result</h2>
+                    <p>Total attacks on <span id="result-date"></span></p>
+                    <div class="count" id="noisy-count">-</div>
+                    <p style="font-size: 14px; opacity: 0.9;">
+                        Privacy-protected count with fresh noise
+                    </p>
+                </div>
+
+                <!-- Debug Details (only shown in debug mode) -->
+                <div class="result-details debug-section">
+                    <div class="detail-card">
+                        <div class="label">Query Time</div>
+                        <div class="value" id="query-time">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Epsilon (ε)</div>
+                        <div class="value" id="result-epsilon">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Sensitivity (Δf)</div>
+                        <div class="value" id="sensitivity">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Noise Added</div>
+                        <div class="value" id="noise">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">Number of IPs</div>
+                        <div class="value" id="num-ips">-</div>
+                    </div>
+                    <div class="detail-card">
+                        <div class="label">True Count</div>
+                        <div class="value" id="true-count">-</div>
+                    </div>
+                </div>
+
+                <!-- Top Attackers (debug only) -->
+                <div class="top-attackers debug-section">
+                    <h4>⚠️ Top 5 Attackers (For Verification - Hidden from User)</h4>
+                    <table id="top-attackers-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>IP Address</th>
+                                <th>Attack Count</th>
+                            </tr>
+                        </thead>
+                        <tbody id="top-attackers-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Interpretation (debug only) -->
+                <div class="info-section debug-section">
+                    <h3>📊 Interpretation</h3>
+                    <ul>
+                        <li>The true count is HIDDEN by adding Laplace noise</li>
+                        <li>Noise magnitude is proportional to largest attacker's contribution</li>
+                        <li>Each query adds FRESH noise - try querying again for different result</li>
+                        <li>Even if someone knows an IP sent many attacks, they cannot determine which day</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div id="error-content" style="display: none;">
+                <div class="error-message" id="error-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set today's date as default
+        document.getElementById('date').valueAsDate = new Date();
+
+        // Update epsilon display and privacy indicator
+        document.getElementById('epsilon').addEventListener('input', function() {
+            const epsilon = parseFloat(this.value);
+            document.getElementById('epsilon-display').textContent = epsilon.toFixed(1);
+
+            const indicator = document.getElementById('privacy-indicator');
+            if (epsilon < 0.5) {
+                indicator.className = 'privacy-indicator privacy-very-strong';
+                indicator.textContent = '●●● Very Strong Privacy';
+            } else if (epsilon < 1.0) {
+                indicator.className = 'privacy-indicator privacy-strong';
+                indicator.textContent = '●● Strong Privacy';
+            } else if (epsilon < 2.0) {
+                indicator.className = 'privacy-indicator privacy-moderate';
+                indicator.textContent = '● Moderate Privacy';
+            } else {
+                indicator.className = 'privacy-indicator privacy-weak';
+                indicator.textContent = '○ Weak Privacy';
+            }
+        });
+
+        async function executeQuery() {
+            const date = document.getElementById('date').value;
+            const epsilon = parseFloat(document.getElementById('epsilon').value);
+
+            if (!date) {
+                alert('Please select a date');
+                return;
+            }
+
+            // Show loading
+            const resultsPanel = document.getElementById('results-panel');
+            const loading = document.getElementById('loading');
+            const resultsContent = document.getElementById('results-content');
+            const errorContent = document.getElementById('error-content');
+
+            resultsPanel.classList.add('show');
+            loading.style.display = 'block';
+            resultsContent.style.display = 'none';
+            errorContent.style.display = 'none';
+
+            // Disable button
+            const btn = document.querySelector('.query-btn');
+            btn.disabled = true;
+
+            try {
+                const response = await fetch('/query', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date, epsilon })
+                });
+
+                const data = await response.json();
+
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+
+                // Display main result
+                document.getElementById('result-date').textContent = data.date;
+                document.getElementById('noisy-count').textContent = data.noisy_count;
+
+                // Display debug information if available
+                if (data.debug_mode) {
+                    document.getElementById('query-time').textContent = data.query_time.split(' ')[1];
+                    document.getElementById('result-epsilon').textContent = data.epsilon.toFixed(2);
+                    document.getElementById('sensitivity').textContent = data.sensitivity;
+                    document.getElementById('noise').textContent = data.noise > 0 ? '+' + data.noise : data.noise;
+                    document.getElementById('num-ips').textContent = data.num_ips;
+                    document.getElementById('true-count').textContent = data.true_count;
+
+                    // Top attackers
+                    const tbody = document.getElementById('top-attackers-body');
+                    tbody.innerHTML = '';
+                    data.top_attackers.forEach((attacker, index) => {
+                        const row = tbody.insertRow();
+                        row.innerHTML = `
+                            <td>${index + 1}</td>
+                            <td>${attacker.ip}</td>
+                            <td>${attacker.count}</td>
+                        `;
+                    });
+                }
+
+                loading.style.display = 'none';
+                resultsContent.style.display = 'block';
+
+            } catch (error) {
+                loading.style.display = 'none';
+                errorContent.style.display = 'block';
+                document.getElementById('error-message').textContent = 'Error: ' + error.message;
+            } finally {
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
