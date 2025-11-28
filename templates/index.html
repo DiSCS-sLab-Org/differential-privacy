@@ -363,9 +363,6 @@
         <div class="header">
             <h1>🔒 Differential Privacy Attack Query Dashboard</h1>
             <p>Query attack counts by day with differential privacy protection</p>
-            {% if debug_mode %}
-            <span class="debug-badge">⚠️ DEBUG MODE</span>
-            {% endif %}
 
             <div class="info-box">
                 <h3>📊 What You're Seeing</h3>
@@ -450,22 +447,6 @@
                         <div class="label">True Count</div>
                         <div class="value" id="true-count">-</div>
                     </div>
-                </div>
-
-                <!-- Top Attackers (debug only) -->
-                <div class="top-attackers debug-section">
-                    <h4>⚠️ Top 5 Attackers (For Verification - Hidden from User)</h4>
-                    <table id="top-attackers-table">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>IP Address</th>
-                                <th>Attack Count</th>
-                            </tr>
-                        </thead>
-                        <tbody id="top-attackers-body">
-                        </tbody>
-                    </table>
                 </div>
 
                 <!-- Interpretation (debug only) -->
@@ -567,18 +548,6 @@
                     document.getElementById('noise').textContent = data.noise > 0 ? '+' + data.noise : data.noise;
                     document.getElementById('num-ips').textContent = data.num_ips;
                     document.getElementById('true-count').textContent = data.true_count;
-
-                    // Top attackers
-                    const tbody = document.getElementById('top-attackers-body');
-                    tbody.innerHTML = '';
-                    data.top_attackers.forEach((attacker, index) => {
-                        const row = tbody.insertRow();
-                        row.innerHTML = `
-                            <td>${index + 1}</td>
-                            <td>${attacker.ip}</td>
-                            <td>${attacker.count}</td>
-                        `;
-                    });
                 }
 
                 loading.style.display = 'none';
