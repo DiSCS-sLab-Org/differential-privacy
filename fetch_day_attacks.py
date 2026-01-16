@@ -19,7 +19,7 @@ ES_CONFIG = {
 
 QUERY_CONFIG = {
     "index": "logstash-*",
-    "port": 22,
+    "type": "Cowrie",
     "exclude_regex": "139\\.91\\..*",  # Exclude internal IPs
     "max_results": 10000
 }
@@ -59,24 +59,26 @@ def fetch_attacks_for_day(date_str: str) -> List[Tuple[str, int]]:
         headers=ES_CONFIG["headers"]
     )
 
-    # Build query: fetch attacks on port 22, exclude internal IPs, aggregate by source IP
+    # Build query: fetch Cowrie attacks, exclude internal IPs, aggregate by source IP
     query = {
         "size": 0,
         "query": {
             "bool": {
+                "must": [
+                    {"match": {"type": QUERY_CONFIG["type"]}}
+                ],
                 "filter": [
-                    {"term": {"dest_port": QUERY_CONFIG["port"]}},
                     {"range": {"@timestamp": {"gte": start_time, "lt": end_time}}},
                 ],
                 "must_not": [
-                    {"regexp": {"src_ip.keyword": QUERY_CONFIG["exclude_regex"]}},
+                    {"regexp": {"src_ip": QUERY_CONFIG["exclude_regex"]}},
                 ],
             }
         },
         "aggs": {
             "attacking_ips": {
                 "terms": {
-                    "field": "src_ip.keyword",
+                    "field": "src_ip",
                     "size": QUERY_CONFIG["max_results"],
                     "order": {"_count": "desc"},
                 }
