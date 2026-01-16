@@ -58,8 +58,7 @@ def apply_differential_privacy(attack_data, epsilon):
         "sensitivity": sensitivity,
         "noise": round(noise, 2),
         "noise_scale": round(scale, 2),
-        "num_ips": len(attack_data),
-        "top_attackers": sorted(attack_data, key=lambda x: x[1], reverse=True)[:5]
+        "num_ips": len(attack_data)
     }
 
 
@@ -114,11 +113,7 @@ def query():
                 "noise": result["noise"],
                 "noise_scale": result["noise_scale"],
                 "num_ips": result["num_ips"],
-                "true_count": result["true_count"],
-                "top_attackers": [
-                    {"ip": ip, "count": count}
-                    for ip, count in result["top_attackers"]
-                ]
+                "true_count": result["true_count"]
             })
 
         return jsonify(response)
