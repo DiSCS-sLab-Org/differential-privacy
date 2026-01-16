@@ -11,8 +11,8 @@ from typing import List, Tuple
 
 # Elasticsearch Configuration
 ES_CONFIG = {
-    "host": "https://139.91.70.220:9200",
-    "api_key": "UkhBVUVaTUJCZktQZkpUUENMWmw6V2xtcXN0elRSbmVPR29odEM1MDZoZw==",
+    "host": "https://139.91.70.222:9200",
+    "api_key": "cnVJcW9wc0JCNlJtNjdPSUlXTG86RnlKYzl6b0RBQTV5VmtjTE5VVEtCdw==",
     "verify_certs": False,
     "headers": {"Accept": "application/vnd.elasticsearch+json; compatible-with=8"}
 }
