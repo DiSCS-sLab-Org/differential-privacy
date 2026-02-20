@@ -1,0 +1,27 @@
+services:
+  differential-privacy:
+    build:
+      context: .
+    image: differential-privacy:latest
+    container_name: differential-privacy
+    restart: unless-stopped
+    ports:
+      - "${DP_HOST_PORT:-8889}:8889"
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "8889"
+      DP_DEBUG_MODE: "${DP_DEBUG_MODE:-false}"
+      ES_HOST: "${ES_HOST:?ES_HOST is required in .env}"
+      ES_API_KEY: "${ES_API_KEY:?ES_API_KEY is required in .env}"
+      ES_VERIFY_CERTS: "${ES_VERIFY_CERTS:-false}"
+      ES_ACCEPT_HEADER: "${ES_ACCEPT_HEADER:-application/vnd.elasticsearch+json; compatible-with=8}"
+      ES_INDEX: "${ES_INDEX:-logstash-*}"
+      ES_TYPE: "${ES_TYPE:-Cowrie}"
+      ES_EXCLUDE_REGEX: '${ES_EXCLUDE_REGEX:-139\\.91\\..*}'
+      ES_MAX_RESULTS: "${ES_MAX_RESULTS:-10000}"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8889/', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
